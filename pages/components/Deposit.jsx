@@ -159,11 +159,56 @@ const Deposit = () => {
 
   const isGameEnded = timer === "00:00"; // Check if the timer is at 0:00
 
+  async function changeMetaMaskNetwork() {
+    try {
+      await ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: "0xbfc0" }], // Replace with the desired network chainId for Bifrost
+      });
+    } catch (error) {
+      console.error("Error changing network:", error);
+      // Handle error or prompt user to switch manually
+    }
+  }
+
   const handleClick = async () => {
     console.log("started deposit");
     const getupdatedamount = depositamount;
-    const res = await deposit({ getupdatedamount });
-    console.log(res.toString());
+    // const res = await deposit({ getupdatedamount });
+    // console.log(res.toString());
+
+    // Check if MetaMask is installed and enabled
+    if (window.ethereum) {
+      try {
+        // Request the user's permission to access their accounts
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+
+        // Get the current network ID
+        const networkId = await window.ethereum.request({
+          method: "net_version",
+        });
+        console.log(networkId);
+        // Check if the current network is "bifrost" (replace 'bifrost' with the desired network name)
+        if (networkId === "49088") {
+          // Call the deposit function
+          const res = await deposit({ getupdatedamount });
+          console.log(res.toString());
+        } else {
+          // Notify the user to switch to the "bifrost" network
+          alert("Please switch to the Bifrost network to deposit.");
+          await changeMetaMaskNetwork();
+          // Optionally, you can provide the user with a link or instructions to switch networks.
+          // For example, you can direct them to a guide on how to change networks in MetaMask.
+        }
+      } catch (error) {
+        console.error(error);
+        // Handle error (e.g., user rejected the request or something went wrong)
+      }
+    } else {
+      // MetaMask is not installed or not enabled
+      alert("Please install MetaMask and connect to it to use this feature.");
+      // You can also provide a link to the MetaMask website for installation.
+    }
   };
 
   return (
