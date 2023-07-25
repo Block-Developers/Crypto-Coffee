@@ -244,7 +244,7 @@ const Deposit = () => {
     try {
       await ethereum.request({
         method: "wallet_switchEthereumChain",
-        params: [{ chainId: "0x89" }], // Replace with the desired network chainId for Bifrost
+        params: [{ chainId: "0xbfc0" }], // Replace with the desired network chainId for Bifrost
       });
     } catch (error) {
       console.error("Error changing network:", error);
