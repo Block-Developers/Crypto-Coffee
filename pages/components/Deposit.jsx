@@ -126,6 +126,42 @@ const useBlockchainData = () => {
 
 const Deposit = () => {
   const { timer, gotTime } = useTimer();
+  useEffect(() => {
+    // Function to check and switch the network to bifrost
+    const checkAndSwitchNetwork = async () => {
+      // Check if MetaMask is installed and enabled
+      if (window.ethereum) {
+        try {
+          // Request the user's permission to access their accounts
+          await window.ethereum.request({ method: "eth_requestAccounts" });
+
+          // Get the current network ID
+          const networkId = await window.ethereum.request({
+            method: "net_version",
+          });
+
+          // Check if the current network is "bifrost" (replace 'bifrost' with the desired network name)
+          if (networkId !== "49088") {
+            // Notify the user to switch to the "bifrost" network
+            alert("Please switch to the Bifrost network to use this app.");
+            await changeMetaMaskNetwork();
+            // Optionally, you can provide the user with a link or instructions to switch networks.
+            // For example, you can direct them to a guide on how to change networks in MetaMask.
+          }
+        } catch (error) {
+          console.error(error);
+          // Handle error (e.g., user rejected the request or something went wrong)
+        }
+      } else {
+        // MetaMask is not installed or not enabled
+        alert("Please install MetaMask and connect to it to use this feature.");
+        // You can also provide a link to the MetaMask website for installation.
+      }
+    };
+
+    // Call the checkAndSwitchNetwork function when the component mounts
+    checkAndSwitchNetwork();
+  }, []);
 
   const {
     potvalue,
