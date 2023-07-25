@@ -1,7 +1,6 @@
 import Web3 from "web3";
 import gamblingabi from "../pages/abi/gambling.json";
 import { ethers } from "ethers";
-import { toUtf8Bytes } from "ethers/lib/utils.js";
 
 const isBrowser = () => typeof window !== "undefined"; //The approach recommended by Next.js
 const { ethereum } = isBrowser();
