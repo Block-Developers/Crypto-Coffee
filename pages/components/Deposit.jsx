@@ -302,7 +302,7 @@ const Deposit = () => {
         )}
       </div>
 
-      <div className="mt-8 animate-bounce">
+      <div className="mt-8 ">
         {isGameEnded ? (
           <>
             <p className="text-center text-xl font-bold text-green-500">
