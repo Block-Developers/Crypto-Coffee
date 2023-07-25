@@ -1,36 +1,37 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
+import { useTimer } from "react-timer-hook";
 
-function CountdownTimer({ initialTime }) {
-  const [remainingTime, setRemainingTime] = useState(initialTime);
+function MyTimer({ expiryTimestamp, gotTime }) {
+  const {
+    totalSeconds,
+    seconds,
+    minutes,
+    hours,
+    days,
+    isRunning,
+    start,
+    pause,
+    resume,
+    restart,
+  } = useTimer({
+    expiryTimestamp,
+    onExpire: () => console.warn("onExpire called"),
+  });
 
-  useEffect(() => {
-    let interval;
-
-    if (remainingTime > 0) {
-      interval = setInterval(() => {
-        setRemainingTime((prevTime) => prevTime - 1);
-      }, 1000);
+  // Start the timer when gotTime is true and expiryTimestamp is valid
+  React.useEffect(() => {
+    if (gotTime && expiryTimestamp) {
+      start();
     }
-
-    return () => clearInterval(interval);
-  }, [remainingTime]);
-
-  const formatTime = (timeInSeconds) => {
-    const minutes = Math.floor(timeInSeconds / 60);
-    const seconds = timeInSeconds % 60;
-    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
-      2,
-      "0"
-    )}`;
-  };
+  }, [gotTime, expiryTimestamp]);
 
   return (
     <div style={{ textAlign: "center" }}>
       <div style={{ fontSize: "100px" }}>
-        <span>{formatTime(remainingTime)}</span>
+        <span>{expiryTimestamp}</span>
       </div>
     </div>
   );
 }
 
-export default CountdownTimer;
+export default MyTimer;

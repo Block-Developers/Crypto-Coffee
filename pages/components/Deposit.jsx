@@ -8,12 +8,9 @@ import {
   getPlayerDepositCount,
   getPlayerTotalDeposit,
   getDepositAmount,
-  SplitDeposit,
 } from "../../config/BlockchainServices";
 import { useAccount } from "wagmi";
-
-import CountdownTimer from "./Timer";
-import RefreshButton from "./Refresh";
+import MyTimer from "./Timer";
 
 const weiToEth = (wei) => {
   // 1 Ether (ETH) = 10^18 Wei
@@ -39,78 +36,17 @@ const formatTime = (seconds) => {
 
 const useTimer = () => {
   const [timer, setTimer] = useState(0);
-
   const [gotTime, setGotTime] = useState(false);
-
-  const [isGameEnded, setIsGameEnded] = useState(false);
-
-  const [endGame, setEndGame] = useState(false);
-
-  useEffect(() => {
-    if (timer === "00:00") {
-      setIsGameEnded(true);
-      console.log(timer, isGameEnded);
-      setEndGame(true);
-    }
-  }, [timer]);
 
   useEffect(() => {
     const handleGetTime = async () => {
       const res = await getRemainingTime();
-      const timeInSecond = parseInt(res, 10);
-      console.log(timeInSecond);
-      setTimer(timeInSecond);
-      localStorage.setItem("timerValue", timeInSecond);
-
-      setGotTime(true);
       const time = formatTime(res.toString());
-      console.log("rem timme:", time, typeof time);
-
-      if (time === "00:00") {
-        console.log(true);
-        setEndGame(true);
-      }
-      console.log(endGame);
       setTimer(time);
-    };
-
-    const automateSplitAndUnfreeze = async () => {
-      // Check if the game is not frozen and remaining time is 0
-      console.log("Timer:", timer);
-      const res = await getRemainingTime();
-      const time = formatTime(res.toString());
-      console.log("rem timme:", time, typeof time);
-
-      if (time === "0" || time === "00:00" || endGame) {
-        // Wait for 15 seconds
-        console.log("intered timer");
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        // Call the SplitDeposit function
-        try {
-          if ("something") {
-            console.log("Calling SplitDeposit...");
-            const splitTx = await SplitDeposit();
-            await splitTx.wait(); // Wait for the transaction to be mined
-            console.log("SplitDeposit function called successfully!");
-
-            const res = await getRemainingTime();
-            const timeInSecond = parseInt(res, 10);
-            console.log(timeInSecond, typeof timeInSecond);
-            setTimer(timeInSeconds);
-            window.location.reload();
-            return;
-          }
-        } catch (error) {
-          console.error("Error in automateSplitAndUnfreeze:", error);
-        }
-      }
     };
 
     const intervalId = setInterval(() => {
       handleGetTime();
-
-      automateSplitAndUnfreeze();
     }, 1000); // Update the timer every second
 
     handleGetTime();
@@ -131,7 +67,6 @@ const useBlockchainData = () => {
   const [totalPlayers, setTotalPlayers] = useState("");
   const [LastDepositor, setlastDepositor] = useState("");
   const [mydeposit, SetMydeposit] = useState("");
-
   // const [address, setaddress] = useState("");
   const [depositamount, setdeposit] = useState("");
   useEffect(() => {
@@ -191,6 +126,7 @@ const useBlockchainData = () => {
 
 const Deposit = () => {
   const { timer, gotTime } = useTimer();
+
   const {
     potvalue,
     totalPlayers,
@@ -199,10 +135,9 @@ const Deposit = () => {
 
     depositamount,
   } = useBlockchainData();
-
   const [expiryTimestamp, setExpiryTimestamp] = useState(0); // Add expiryTimestamp state
-  const [timeInSeconds, settimeInSeconds] = useState(0);
-
+  console.log("timer", timer);
+  console.log("gottime", gotTime);
   useEffect(() => {
     // Fetch the expiryTimestamp here and update the state
     const fetchExpiryTimestamp = async () => {
@@ -222,83 +157,23 @@ const Deposit = () => {
     };
   }, []);
 
-  useEffect(() => {
-    const handleGetTime = async () => {
-      const res = await getRemainingTime();
-      const timeInSecond = parseInt(res, 10);
-      console.log(timeInSecond, typeof timeInSecond);
-      settimeInSeconds(timeInSeconds);
-    };
-    handleGetTime();
-    console.log("checkout");
-    console.log(timeInSeconds, timer);
-  }, []);
-
-  useEffect(() => {
-    console.log(timeInSeconds);
-  });
-
   const isGameEnded = timer === "00:00"; // Check if the timer is at 0:00
 
-  async function changeMetaMaskNetwork() {
-    try {
-      await ethereum.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: "0xbfc0" }], // Replace with the desired network chainId for Bifrost
-      });
-    } catch (error) {
-      console.error("Error changing network:", error);
-      // Handle error or prompt user to switch manually
-    }
-  }
   const handleClick = async () => {
     console.log("started deposit");
     const getupdatedamount = depositamount;
-    // const res = await deposit({ getupdatedamount });
-    // console.log(res.toString());
-
-    // Check if MetaMask is installed and enabled
-    if (window.ethereum) {
-      try {
-        // Request the user's permission to access their accounts
-        await window.ethereum.request({ method: "eth_requestAccounts" });
-
-        // Get the current network ID
-        const networkId = await window.ethereum.request({
-          method: "net_version",
-        });
-        console.log(networkId);
-        // Check if the current network is "bifrost" (replace 'bifrost' with the desired network name)
-        if (networkId === "49088") {
-          // Call the deposit function
-          const res = await deposit({ getupdatedamount });
-          console.log(res.toString());
-        } else {
-          // Notify the user to switch to the "bifrost" network
-          alert("Please switch to the Bifrost network to deposit.");
-          await changeMetaMaskNetwork();
-          // Optionally, you can provide the user with a link or instructions to switch networks.
-          // For example, you can direct them to a guide on how to change networks in MetaMask.
-        }
-      } catch (error) {
-        console.error(error);
-        // Handle error (e.g., user rejected the request or something went wrong)
-      }
-    } else {
-      // MetaMask is not installed or not enabled
-      alert("Please install MetaMask and connect to it to use this feature.");
-      // You can also provide a link to the MetaMask website for installation.
-    }
+    const res = await deposit({ getupdatedamount });
+    console.log(res.toString());
   };
 
   return (
-    <div className="flex flex-col items-center justify-center  pb-0 pt-40 text-white">
+    <div className="flex flex-col items-center justify-center bg-gradient-to-b from-purple-500 via-pink-500 to-red-500 pb-20 pt-40 text-white">
       <div className="flex flex-row space-x-20 rounded-lg border-x border-x-white p-5 pb-16">
         {isGameEnded ? (
           <></>
         ) : (
           <div className="">
-            <div className="flex flex-col space-y-2 rounded-lg border border-white border-x-white p-8 pb-[50px]">
+            <div className="flex flex-col space-y-2 rounded-lg border border-white border-x-white p-20 ">
               <p>My Deposit:</p>
               <p className="rounded-lg bg-green-500 px-6 py-3 text-white shadow-lg">
                 {mydeposit}
@@ -307,19 +182,19 @@ const Deposit = () => {
           </div>
         )}
 
-        <div className="flex flex-col space-y-2 rounded-lg border border-white border-x-white p-8 ">
-          <p>Deposit Amount: </p>
+        <div className="flex flex-col space-y-2 rounded-lg border border-white border-x-white p-20 ">
+          <p>Deposit Amount:</p>
           <button className="rounded-lg bg-green-500 px-6 py-3 text-white shadow-lg">
             {depositamount}
           </button>
         </div>
-        <div className="flex flex-col space-y-2 rounded-lg border border-white border-x-white p-8 ">
-          <p>Pot Value:</p>
+        <div className="flex flex-col space-y-2 rounded-lg border border-white border-x-white p-20 ">
+          <p>Get Pot Value:</p>
           <button className="rounded-lg bg-green-500 px-6 py-3 text-white shadow-lg">
             {potvalue}
           </button>
         </div>
-        <div className="flex flex-col rounded-lg border border-white border-x-white p-8 ">
+        <div className="flex flex-col rounded-lg border border-white border-x-white p-20 ">
           <p className="text-center">
             {" "}
             Total Number<br></br> of players:
@@ -338,12 +213,7 @@ const Deposit = () => {
           <>
             <>
               <p className="text-center text-xl">Remaining Time:</p>
-              {/* <MyTimer expiryTimestamp={timer} gotTime={gotTime} /> */}
-              {console.log(timer)}
-              {console.log(localStorage.getItem("timerValue"))}
-              <CountdownTimer
-                initialTime={localStorage.getItem("timerValue")}
-              />
+              <MyTimer expiryTimestamp={timer} gotTime={gotTime} />
             </>
           </>
         ) : (
@@ -351,7 +221,7 @@ const Deposit = () => {
         )}
       </div>
 
-      <div className="mt-8">
+      <div className="mt-8 animate-bounce">
         {isGameEnded ? (
           <>
             <p className="text-center text-xl font-bold text-green-500">
@@ -360,19 +230,18 @@ const Deposit = () => {
             </p>
             <p className="text-center text-xl font-bold text-red-800">
               Ooops, Game is ended.
-              <br /> wait for the game to reset......
+              <br /> wait for the admin to unfreeze it
             </p>
           </>
         ) : (
           <button
-            className="rounded-lg bg-blue-700  px-6 py-3 text-white shadow-lg"
+            className="rounded-lg bg-green-500 px-6 py-3 text-white shadow-lg"
             onClick={handleClick}
           >
             Deposit
           </button>
         )}
       </div>
-      <RefreshButton />
     </div>
   );
 };
